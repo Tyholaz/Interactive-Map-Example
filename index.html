@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Тернопіль</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
+  <style>
+    :root {
+      --bg: #fafafa;
+      --ink: #111;
+      --muted: #777;
+      --line: #e4e4e4;
+      --accent: #e5484d;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: flex; flex-direction: column;
+      background: var(--bg); color: var(--ink);
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+
+    header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 16px 20px;
+    }
+    header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+    header button {
+      border: 0; background: none; padding: 0; font: inherit;
+      color: var(--muted); cursor: pointer; text-decoration: underline;
+      text-underline-offset: 3px; text-decoration-color: var(--line);
+    }
+    header button:hover { color: var(--ink); }
+
+    #map { flex: 1; min-height: 0; background: #f0f0f0; }
+
+    footer { padding: 14px 20px calc(16px + env(safe-area-inset-bottom, 0px)); }
+    #info { margin: 0 0 12px; color: var(--muted); min-height: 1.5em; }
+    #chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    #chips::-webkit-scrollbar { display: none; }
+    #chips button {
+      flex: none; padding: 8px 16px; font: inherit; color: var(--ink);
+      background: transparent; border: 1px solid var(--line); border-radius: 999px;
+      cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+    }
+    #chips button:hover { border-color: var(--ink); }
+    #chips button.active { background: var(--ink); border-color: var(--ink); color: #fff; }
+    button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; box-shadow: 0 0 0 1px var(--ink); }
+    .dot.end { background: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+    .pulse { position: relative; width: 0; height: 0; }
+    .pulse::before, .pulse::after {
+      content: ""; position: absolute; left: -20px; top: -20px; width: 40px; height: 40px;
+      border-radius: 50%; border: 1.5px solid var(--accent); opacity: 0;
+      animation: bam 2s ease-out infinite;
+    }
+    .pulse::after { animation-delay: 1s; }
+    @keyframes bam { 0% { transform: scale(.3); opacity: .8; } 100% { transform: scale(4); opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .pulse::before, .pulse::after { animation: none; opacity: .4; } }
+
+    .dot.end { animation: pop .55s cubic-bezier(.2, 1.7, .4, 1) both; }
+    @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+    #chips button:active { transform: scale(.96); }
+    #info.in { animation: rise .45s ease-out both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .route-line { filter: drop-shadow(0 1px 2px rgba(0,0,0,.25)); }
+    @media (prefers-reduced-motion: reduce) { .dot.end, #info.in { animation: none; } }
+
+    .leaflet-bar { border: 1px solid var(--line) !important; box-shadow: none !important; border-radius: 8px !important; overflow: hidden; }
+    .leaflet-bar a { background: var(--bg); color: var(--ink); border-bottom-color: var(--line); }
+    .leaflet-control-attribution { background: rgba(250,250,250,.8) !important; color: var(--muted); font-size: 10px; }
+    .leaflet-popup-content-wrapper { border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    .leaflet-popup-content { margin: 10px 14px; font: 14px/1.4 system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Тернопіль</h1>
+    <button id="me" type="button">Моя позиція як старт</button>
+  </header>
+
+  <div id="map"></div>
+
+  <footer>
+    <p id="info">Оберіть місце, щоб побачити район і маршрут.</p>
+    <div id="chips"></div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.min.js"></script>
+  <script>
+    const CENTER = [49.5535, 25.5948];
+    let start = CENTER;
+
+    const places = [
+      { name: 'Замок',          coords: [49.5508, 25.5899], radius: 220, info: 'Старовинний замок біля ставу.' },
+      { name: 'Драмтеатр',      coords: [49.5538, 25.5929], radius: 170, info: 'Театральна площа в центрі.' },
+      { name: 'Бульвар Шевченка', coords: [49.5527, 25.5946], radius: 190, info: 'Головна пішохідна вулиця.' },
+      { name: 'Ставок',         coords: [49.5532, 25.5770], radius: 400, info: 'Великий став з набережною.' },
+    ];
+
+    const map = L.map('map', { zoomControl: true }).setView(CENTER, 14);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; учасники OpenStreetMap',
+      maxZoom: 19
+    }).addTo(map);
+
+    const dotIcon = cls => L.divIcon({ className: '', html: `<div class="dot ${cls || ''}"></div>`, iconSize: [12, 12] });
+    const startMarker = L.marker(start, { icon: dotIcon() }).addTo(map);
+
+    let zone = null, pulse = null, endMarker = null, routeControl = null, routeLine = null;
+    let token = 0, drawTimer = null;
+
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+    const info = document.getElementById('info');
+
+    function setInfo(text) {
+      info.classList.remove('in');
+      void info.offsetWidth;
+      info.textContent = text;
+      info.classList.add('in');
+    }
+
+    function tween(ms, step, done, myToken) {
+      if (reduce) { step(1); done && done(); return; }
+      const t0 = performance.now();
+      (function frame(now) {
+        if (myToken !== token) return;
+        const t = Math.min((now - t0) / ms, 1);
+        step(easeOut(t));
+        if (t < 1) requestAnimationFrame(frame); else done && done();
+      })(t0);
+    }
+
+    function clearLayers() {
+      clearTimeout(drawTimer);
+      [zone, pulse, endMarker, routeLine].forEach(l => l && map.removeLayer(l));
+      zone = pulse = endMarker = routeLine = null;
+      if (routeControl) { map.removeControl(routeControl); routeControl = null; }
+    }
+
+    function drawRoute(coords, myToken, done) {
+      if (myToken !== token) return;
+      routeLine = L.polyline(coords, {
+        color: '#111', weight: 4, opacity: 0.85, lineCap: 'round', lineJoin: 'round', className: 'route-line'
+      }).addTo(map);
+      const path = routeLine.getElement();
+      if (reduce || !path || !path.getTotalLength) { done && done(); return; }
+      const len = path.getTotalLength();
+      path.style.strokeDasharray = len;
+      path.style.strokeDashoffset = len;
+      path.getBoundingClientRect(); // примусовий reflow
+      path.style.transition = 'stroke-dashoffset 1s ease-in-out';
+      path.style.strokeDashoffset = 0;
+      path.addEventListener('transitionend', () => {
+        path.style.strokeDasharray = 'none'; // щоб лінія коректно масштабувалась при зумі
+        done && done();
+      }, { once: true });
+    }
+
+    function showPlace(p, btn) {
+      const myToken = ++token;
+      document.querySelectorAll('#chips button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      clearLayers();
+      setInfo('Прокладаю маршрут…');
+
+      // зона району "розкривається" від центру
+      zone = L.circle(p.coords, {
+        radius: 1, color: '#e5484d', weight: 1.5, fillColor: '#e5484d', fillOpacity: 0
+      }).addTo(map);
+      tween(700, k => zone.setRadius(Math.max(1, p.radius * k)) && zone.setStyle({ fillOpacity: 0.09 * k, opacity: k }), null, myToken);
+
+      pulse = L.marker(p.coords, {
+        icon: L.divIcon({ className: '', html: '<div class="pulse"></div>', iconSize: [0, 0] }),
+        interactive: false
+      }).addTo(map);
+      endMarker = L.marker(p.coords, { icon: dotIcon('end') }).addTo(map).bindPopup(p.name);
+
+      routeControl = L.Routing.control({
+        waypoints: [L.latLng(start), L.latLng(p.coords)],
+        router: L.Routing.osrmv1({ serviceUrl: 'https://routing.openstreetmap.de/routed-foot/route/v1' }),
+        addWaypoints: false, draggableWaypoints: false, fitSelectedRoutes: false,
+        show: false, createMarker: () => null,
+        lineOptions: { styles: [{ opacity: 0, weight: 1 }] } // власну лінію малюємо самі
+      }).on('routesfound', e => {
+        if (myToken !== token) return;
+        const r = e.routes[0];
+        const bounds = L.latLngBounds(r.coordinates).extend(zone.getBounds());
+        map.flyToBounds(bounds, { padding: [40, 40], duration: 1.2, maxZoom: 17 });
+
+        let drawn = false;
+        const go = () => {
+          if (drawn || myToken !== token) return;
+          drawn = true;
+          drawRoute(r.coordinates, myToken, () => myToken === token && endMarker && endMarker.openPopup());
+        };
+        map.once('moveend', go);
+        drawTimer = setTimeout(go, 1350); // запасний варіант, якщо карта не рухалась
+
+        setInfo(`${p.name} — ${p.info} Пішки ${(r.summary.totalDistance / 1000).toFixed(1)} км, ${Math.round(r.summary.totalTime / 60)} хв.`);
+      }).on('routingerror', () => {
+        setInfo('Не вдалося прокласти маршрут. Спробуйте ще раз.');
+      }).addTo(map);
+    }
+
+    const chips = document.getElementById('chips');
+    places.forEach(p => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = p.name;
+      b.onclick = () => showPlace(p, b);
+      chips.appendChild(b);
+    });
+
+    document.getElementById('me').onclick = () => {
+      navigator.geolocation.getCurrentPosition(pos => {
+        start = [pos.coords.latitude, pos.coords.longitude];
+        startMarker.setLatLng(start);
+        map.setView(start, 14);
+        document.getElementById('info').textContent = 'Старт оновлено. Оберіть місце.';
+      }, () => {
+        document.getElementById('info').textContent = 'Немає доступу до геолокації.';
+      });
+    };
+  </script>
+</body>
+</html>
