@@ -22,13 +22,14 @@
       padding-left: calc(20px + env(safe-area-inset-left, 0px)); padding-right: calc(20px + env(safe-area-inset-right, 0px));
       border-bottom: 1px solid var(--line); background: var(--bg); position: relative; z-index: 1200; }
     header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tools { display: flex; gap: 16px; flex: none; }
+    .tools { display: flex; gap: 16px; flex: none; align-items: center; }
     .link { border: 0; background: none; padding: 0; font: inherit; color: var(--muted); cursor: pointer; text-decoration: underline;
       text-underline-offset: 3px; text-decoration-color: var(--line); transition: color .15s; }
     .link:hover, .link.on { color: var(--ink); }
     .link.on { text-decoration-color: var(--ink); }
     .tb { display: inline-flex; align-items: center; gap: 6px; }
     .tb[data-busy] { opacity: .5; }
+    #lang { font-weight: 600; font-size: 13px; text-decoration: none; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; }
 
     /* ---------- макет: мобільний (за замовчуванням) ---------- */
     main { flex: 1; min-height: 0; position: relative; display: grid; grid-template-columns: 1fr; overflow: hidden; }
@@ -177,7 +178,6 @@
     }
 
     /* ================= ефекти v2 ================= */
-    /* поява сторінки: карта «розкривається» колом, шапка й панель в'їжджають */
     @keyframes mapin { from { clip-path: circle(0% at 50% 60%); opacity: .4; } to { clip-path: circle(150% at 50% 60%); opacity: 1; } }
     #map { animation: mapin 1.3s cubic-bezier(.2,.7,.2,1) backwards; }
     @keyframes hdrin { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -190,33 +190,27 @@
     .fab { animation: fabin .6s cubic-bezier(.2,1.6,.4,1) backwards; }
     .fab:nth-child(1) { animation-delay: .7s; } .fab:nth-child(2) { animation-delay: .8s; }
 
-    /* перехід список ⇄ деталі: слайд убік */
     @keyframes slideFwd { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
     @keyframes slideBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
     #detail { animation: slideFwd .4s cubic-bezier(.2,.8,.2,1) backwards; }
     #top, #bar, #list { animation: slideBack .4s cubic-bezier(.2,.8,.2,1) backwards; }
 
-    /* елементи списку: м'яке «проявлення» з розфокусом (backwards — щоб працював hover) */
     @keyframes itemin { from { opacity: 0; transform: translateY(10px) scale(.98); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
     .item { animation: itemin .5s cubic-bezier(.2,.8,.2,1) backwards; }
 
-    /* маркер вибраного місця «підстрибує» */
     @keyframes selpop { 0% { transform: scale(.7) translateY(0); } 35% { transform: scale(1.55) translateY(-12px); } 65% { transform: scale(1.1) translateY(2px); } 100% { transform: scale(1.2); } }
     .pin.sel { animation: selpop .65s cubic-bezier(.3,1.4,.5,1) 0s; }
 
-    /* маршрут: м'яке світіння та хвиля прибуття */
     .route-glow { animation: glowin .8s ease-out both; }
     @keyframes glowin { from { opacity: 0; } to { opacity: .3; } }
     .arrive { position: relative; width: 0; height: 0; }
     .arrive::before { content: ""; position: absolute; left: -30px; top: -30px; width: 60px; height: 60px; border-radius: 50%; background: var(--accent); opacity: .5; animation: arrive 1.2s ease-out forwards; }
     @keyframes arrive { to { transform: scale(2.8); opacity: 0; } }
 
-    /* чіпи: пружинний «клік» */
     #chips button { transition: background .25s, color .25s, border-color .25s, transform .2s cubic-bezier(.2,1.6,.4,1); }
     @keyframes chipbounce { 0% { transform: scale(.9); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
     #chips button.bounce { animation: chipbounce .4s cubic-bezier(.2,1.6,.4,1); }
 
-    /* «збережене»: серце та іскри */
     .item .f { display: inline-grid; place-items: center; }
     .f, #fv { position: relative; } #fv { display: inline-block; }
     .pop { animation: heart .5s cubic-bezier(.2,1.8,.4,1); display: revert; }
@@ -224,13 +218,11 @@
     .spark { position: absolute; left: 50%; top: 50%; width: 5px; height: 5px; border-radius: 50%; pointer-events: none; animation: spark .6s ease-out forwards; }
     @keyframes spark { from { transform: translate(-50%, -50%) scale(1); opacity: 1; } to { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(.2); opacity: 0; } }
 
-    /* текст маршруту та тости */
     @keyframes swap { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .swap { animation: swap .4s ease-out; }
     .toast { transform: translate(-50%, -16px) scale(.9); transition: opacity .25s, transform .5s cubic-bezier(.2,1.5,.4,1); }
     .toast.on { transform: translate(-50%, 0) scale(1); }
 
-    /* зміна теми: коло розходиться від кнопки (View Transitions) */
     ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
     ::view-transition-old(root) { z-index: 1; } ::view-transition-new(root) { z-index: 2; }
 
@@ -246,6 +238,7 @@
       <button class="link tb" id="rnd" type="button" aria-label="Здивуй мене"><i data-ic="dice"></i><span>Здивуй мене</span></button>
       <button class="link tb" id="me" type="button" aria-label="Моя позиція як старт"><i data-ic="locate"></i><span>Моя позиція як старт</span></button>
       <button class="link tb" id="theme" type="button" aria-label="Змінити тему"><i id="ti"></i><span id="tl">Темна</span></button>
+      <button class="link" id="lang" type="button" aria-label="Мова / Language">UA</button>
     </div>
   </header>
   <div id="load"></div>
@@ -769,6 +762,198 @@
       $('load') && $('load').remove(); setItems(data.map(fromOSM).filter(Boolean));
     }
     loadPlaces().then(loadBoundary);
+
+/* ===== i18n: UA / EN / PL ===== вставте цей блок у <script> ПІСЛЯ основного скрипта ===== */
+(() => {
+  const R = [
+    /* інтерфейс */
+    ["Аляска, Тернопіль — куди піти", "Alaska, Ternopil — where to go", "Alaska, Tarnopol — dokąd pójść"],
+    ["Аляска · Тернопіль — куди піти", "Alaska · Ternopil — where to go", "Alaska · Tarnopol — dokąd pójść"],
+    ["Де поїсти, де погуляти і що побачити в районі Аляска у Тернополі: інтерактивна карта з маршрутами.", "Where to eat, stroll and what to see in the Alaska district of Ternopil: an interactive map with routes.", "Gdzie zjeść, pospacerować i co zobaczyć na osiedlu Alaska w Tarnopolu: interaktywna mapa z trasami."],
+    ["Здивуй мене", "Surprise me", "Zaskocz mnie"],
+    ["Моя позиція як старт", "Use my location as start", "Moja pozycja jako start"],
+    ["Моя позиція", "My location", "Moja pozycja"],
+    ["Темна", "Dark", "Ciemny"], ["Світла", "Light", "Jasny"],
+    ["Змінити тему", "Change theme", "Zmień motyw"],
+    ["Карта", "Map", "Mapa"],
+    ["Список місць", "List of places", "Lista miejsc"],
+    ["Змінити висоту панелі", "Resize panel", "Zmień wysokość panelu"],
+    ["Пошук", "Search", "Szukaj"],
+    ["Пошук місць  ( / )", "Search places  ( / )", "Szukaj miejsc  ( / )"],
+    ["Завантажую місця…", "Loading places…", "Ładuję miejsca…"],
+    ["Ближчі", "Nearest", "Najbliższe"], ["А–Я", "A–Z", "A–Z"],
+    ["До району", "To the district", "Do osiedla"],
+    ["Старт", "Start", "Start"],
+    ["Усе", "All", "Wszystko"], ["Відкрито зараз", "Open now", "Otwarte teraz"],
+    ["Поїсти", "Eat", "Zjeść"], ["Кав'ярні", "Cafés", "Kawiarnie"], ["Бари", "Bars", "Bary"],
+    ["Погуляти", "Stroll", "Spacer"], ["Побачити", "See", "Zobaczyć"], ["Магазини", "Shops", "Sklepy"],
+    ["♥ Збережене", "♥ Saved", "♥ Zapisane"],
+    ["← Усі місця", "← All places", "← Wszystkie miejsca"],
+    ["Адреса", "Address", "Adres"], ["Кухня", "Cuisine", "Kuchnia"], ["Години", "Hours", "Godziny"],
+    ["Телефон", "Phone", "Telefon"], ["Сайт", "Website", "Strona"],
+    ["Пішки", "On foot", "Pieszo"], ["Велосипед", "Bike", "Rower"], ["Авто", "Car", "Samochód"],
+    ["Прокладаю маршрут…", "Plotting route…", "Wyznaczam trasę…"],
+    ["♥ Збережено", "♥ Saved", "♥ Zapisano"], ["♡ Зберегти", "♡ Save", "♡ Zapisz"], ["Зберегти", "Save", "Zapisz"],
+    ["Поділитись", "Share", "Udostępnij"],
+    ["відкрито", "open", "otwarte"], ["зачинено", "closed", "zamknięte"], ["добірка", "curated", "polecane"],
+    ["Не вдалося прокласти маршрут. Спробуйте ще раз.", "Could not plot the route. Try again.", "Nie udało się wyznaczyć trasy. Spróbuj ponownie."],
+    ["Немає з'єднання з інтернетом.", "No internet connection.", "Brak połączenia z internetem."],
+    ["Немає з'єднання з інтернетом", "No internet connection", "Brak połączenia z internetem"],
+    ["З'єднання відновлено", "Connection restored", "Połączenie przywrócone"],
+    ["Посилання скопійовано", "Link copied", "Link skopiowany"],
+    ["Старт — ваша позиція", "Start — your location", "Start — Twoja pozycja"],
+    ["Дозвольте доступ до геолокації в налаштуваннях браузера", "Allow location access in your browser settings", "Zezwól na dostęp do lokalizacji w ustawieniach przeglądarki"],
+    ["Не вдалося визначити позицію", "Could not determine your location", "Nie udało się ustalić pozycji"],
+    ["Геолокація недоступна в цьому браузері", "Geolocation is not available in this browser", "Geolokalizacja jest niedostępna w tej przeglądarce"],
+    ["Збережених місць ще немає — натисніть ♡ біля будь-якого.", "No saved places yet — tap ♡ next to any place.", "Brak zapisanych miejsc — dotknij ♡ przy dowolnym."],
+    ["Нічого не знайдено.", "Nothing found.", "Nic nie znaleziono."],
+    ["Показати ще", "Show more", "Pokaż więcej"],
+    ["Не вдалося завантажити місця.", "Could not load places.", "Nie udało się załadować miejsc."],
+    ["Повторити", "Retry", "Ponów"],
+
+    /* добірка: назви, описи, факти */
+    ["ТРЦ «Подоляни»", "Podolyany Mall", "CH „Podoliany”"],
+    ["Найбільший торгово-розважальний центр Тернополя біля об'їзної: магазини, їжа й розваги під одним дахом.", "Ternopil's largest shopping and entertainment center by the ring road: shops, food and entertainment under one roof.", "Największe centrum handlowo-rozrywkowe Tarnopola przy obwodnicy: sklepy, jedzenie i rozrywka pod jednym dachem."],
+    ["Відкритий у 2007 році", "Opened in 2007", "Otwarte w 2007 roku"],
+    ["Близько 50 тис. м², паркінг на ~1800 місць", "About 50,000 m², parking for ~1,800 cars", "Ok. 50 tys. m², parking na ~1800 miejsc"],
+    ["Сільпо, Фокстрот, LC Waikiki, Reserved, Sinsay, Intersport та інші", "Silpo, Foxtrot, LC Waikiki, Reserved, Sinsay, Intersport and others", "Silpo, Foxtrot, LC Waikiki, Reserved, Sinsay, Intersport i inne"],
+    ["вул. Текстильна, 28ч", "Tekstylna St., 28ch", "ul. Tekstylna 28ch"],
+    ["Подоляни Mall (нова черга)", "Podolyany Mall (new phase)", "Podoliany Mall (nowy etap)"],
+    ["Нова будівля комплексу з панорамним фудкортом.", "New building of the complex with a panoramic food court.", "Nowy budynek kompleksu z panoramicznym food courtem."],
+    ["Анонсовані KFC (перший у Тернополі), «Чорноморка», Pepco, New Yorker, CCC", "Announced: KFC (the first in Ternopil), Chornomorka, Pepco, New Yorker, CCC", "Zapowiedziane: KFC (pierwszy w Tarnopolu), „Czornomorka”, Pepco, New Yorker, CCC"],
+    ["Розважальний центр FlyKids", "FlyKids entertainment center", "Centrum rozrywki FlyKids"],
+    ["Відкриття було заплановане на 15 жовтня 2026 — перевірте, чи вже працює", "Opening was planned for 15 October 2026 — check whether it is already open", "Otwarcie planowano na 15 października 2026 — sprawdź, czy już działa"],
+    ["Льодовий центр «Ескімос»", "Eskimo Ice Center", "Lodowisko „Eskimos”"],
+    ["Всесезонний льодовий центр у «Подолянах».", "All-season ice center in Podolyany Mall.", "Całoroczne lodowisko w CH „Podoliany”."],
+    ["За даними сайту ТРЦ — єдиний у місті всесезонний", "According to the mall's website — the only all-season one in the city", "Według strony centrum — jedyne całoroczne w mieście"],
+    ["ТРЦ «Подоляни»", "Podolyany Mall", "CH „Podoliany”"],
+    ["Більярд-боулінг клуб «Silver»", "Silver Billiards & Bowling Club", "Klub bilardowo-kręglarski „Silver”"],
+    ["Боулінг і більярд для компанії.", "Bowling and billiards for groups.", "Kręgle i bilard dla towarzystwa."],
+    ["За даними сайту ТРЦ — найбільший у місті більярд-боулінг клуб", "According to the mall's website — the city's largest billiards and bowling club", "Według strony centrum — największy w mieście klub bilardowo-kręglarski"],
+    ["Кінотеатр MiroMax", "MiroMax Cinema", "Kino MiroMax"],
+    ["Багатозальний кінотеатр у торговому центрі.", "Multiplex cinema in the shopping center.", "Wielosalowe kino w centrum handlowym."],
+    ["Поруч також 5D та 7D кінотеатри", "There are also 5D and 7D cinemas nearby", "W pobliżu także kina 5D i 7D"],
+    ["Концерт-хол «Подоляни»", "Podolyany Concert Hall", "Sala koncertowa „Podoliany”"],
+    ["Зал для концертів, весіль, конференцій і виставок.", "Hall for concerts, weddings, conferences and exhibitions.", "Sala na koncerty, wesela, konferencje i wystawy."],
+    ["Позиціонується як найбільший концерт-хол Західної України", "Billed as the largest concert hall in Western Ukraine", "Reklamowana jako największa sala koncertowa zachodniej Ukrainy"],
+    ["Піцерія «Пепероні»", "Peperoni Pizzeria", "Pizzeria „Peperoni”"],
+    ["італійська", "Italian", "włoska"], ["піца", "pizza", "pizza"], ["суші", "sushi", "sushi"],
+    ["Італійська піцерія в «Подолянах».", "Italian pizzeria in Podolyany Mall.", "Włoska pizzeria w CH „Podoliany”."],
+    ["Сільпо («Подоляни»)", "Silpo (Podolyany)", "Silpo („Podoliany”)"],
+    ["Супермаркет у торговому центрі.", "Supermarket in the shopping center.", "Supermarket w centrum handlowym."],
+    ["Фокстрот («Подоляни»)", "Foxtrot (Podolyany)", "Foxtrot („Podoliany”)"],
+    ["Магазин побутової техніки та електроніки.", "Home appliances and electronics store.", "Sklep z AGD i elektroniką."],
+    ["Intersport («Подоляни»)", "Intersport (Podolyany)", "Intersport („Podoliany”)"],
+    ["Спортивний одяг, взуття та інвентар.", "Sportswear, footwear and equipment.", "Odzież sportowa, obuwie i sprzęt."],
+    ["LC Waikiki («Подоляни»)", "LC Waikiki (Podolyany)", "LC Waikiki („Podoliany”)"],
+    ["Одяг для всієї родини.", "Clothing for the whole family.", "Odzież dla całej rodziny."],
+    ["Кав'ярня «Цукерка»", "Tsukerka Café", "Kawiarnia „Cukierka”"],
+    ["Кава, десерти, свіжа випічка; є комплексні обіди та сніданки.", "Coffee, desserts, fresh pastries; set lunches and breakfasts available.", "Kawa, desery, świeże wypieki; są zestawy obiadowe i śniadania."],
+    ["Також у ТРЦ «Подоляни» діє кондитерська «Цукерка»", "There is also a Tsukerka pastry shop in Podolyany Mall", "W CH „Podoliany” działa też cukiernia „Cukierka”"],
+    ["Кав'ярня-піцерія «Формія»", "Formiya Café & Pizzeria", "Kawiarnia-pizzeria „Formia”"],
+    ["Кав'ярня з піцою; відгуки хвалять торти на замовлення.", "Café with pizza; reviews praise the made-to-order cakes.", "Kawiarnia z pizzą; opinie chwalą torty na zamówienie."],
+    ["вул. Леся Курбаса, 2а", "Les Kurbas St., 2a", "ul. Lesia Kurbasa 2a"],
+    ["Піца й суші, є бронювання столиків і доставка.", "Pizza and sushi; table reservations and delivery available.", "Pizza i sushi; możliwa rezerwacja stolika i dostawa."],
+    ["бульвар Дмитра Вишневецького, 1", "Dmytro Vyshnevetsky Blvd., 1", "bulwar Dmytra Wyszniewieckiego 1"],
+    ["АТБ (Курбаса, 2а)", "ATB (Kurbas St., 2a)", "ATB (ul. Kurbasa 2a)"],
+    ["Супермаркет біля початку вулиці Курбаса.", "Supermarket at the start of Kurbas Street.", "Supermarket na początku ulicy Kurbasa."],
+    ["Супермаркет «Смаколик» №10", "Smakolyk Supermarket No. 10", "Supermarket „Smakolyk” nr 10"],
+    ["Продуктовий супермаркет.", "Grocery supermarket.", "Supermarket spożywczy."],
+    ["Пекарня «Лаваш»", "Lavash Bakery", "Piekarnia „Lawasz”"],
+    ["Пекарня зі свіжим хлібом і випічкою.", "Bakery with fresh bread and pastries.", "Piekarnia ze świeżym chlebem i wypiekami."],
+    ["вул. Леся Курбаса, 3", "Les Kurbas St., 3", "ul. Lesia Kurbasa 3"],
+    ["АТБ (Курбаса, 7)", "ATB (Kurbas St., 7)", "ATB (ul. Kurbasa 7)"],
+    ["Супермаркет біля «Подолян».", "Supermarket near Podolyany Mall.", "Supermarket przy CH „Podoliany”."],
+    ["вул. Леся Курбаса, 7", "Les Kurbas St., 7", "ul. Lesia Kurbasa 7"],
+    ["Магазин «Близенько»", "Blyzenko Store", "Sklep „Blyzenko”"],
+    ["Мережевий магазин біля дому.", "Neighborhood chain store.", "Sieciowy sklep blisko domu."],
+    ["Храм апостола Іоана Богослова (ПЦУ)", "Church of St. John the Theologian (OCU)", "Cerkiew św. Jana Teologa (PCU)"],
+    ["Храм у самому серці району.", "A church in the very heart of the district.", "Cerkiew w samym sercu osiedla."],
+    ["вул. Леся Курбаса, 6а", "Les Kurbas St., 6a", "ul. Lesia Kurbasa 6a"],
+    ["Бульвар Дмитра Вишневецького", "Dmytro Vyshnevetsky Boulevard", "Bulwar Dmytra Wyszniewieckiego"],
+    ["бульвар Дмитра Вишневецького", "Dmytro Vyshnevetsky Blvd.", "bulwar Dmytra Wyszniewieckiego"],
+    ["Пішохідний бульвар, серце району: спокійна прогулянка між вулицями Курбаса та Симоненка.", "Pedestrian boulevard, the heart of the district: a calm walk between Kurbas and Symonenko streets.", "Deptak, serce osiedla: spokojny spacer między ulicami Kurbasa i Symonenki."],
+    ["Реконструйований у 2015 році", "Reconstructed in 2015", "Zrewitalizowany w 2015 roku"],
+    ["Є фонтан, лавки та дитячий майданчик", "Has a fountain, benches and a playground", "Jest fontanna, ławki i plac zabaw"]
+  ];
+  const D = Object.fromEntries(R.map(r => [r[0], [r[1], r[2]]]));
+  const NAMES = { uk: 'Українська', en: 'English', pl: 'Polski' }, ORDER = ['uk', 'en', 'pl'], CODE = { uk: 'UA', en: 'EN', pl: 'PL' };
+  let lang = 'uk';
+  const ix = () => lang === 'en' ? 0 : 1, WS = /^(\s*)([\s\S]*?)(\s*)$/, CY = "а-яіїєґ'";
+  const plPl = n => n === 1 ? 'miejsce' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'miejsca' : 'miejsc';
+
+  function part(p, i) {
+    const m = p.match(WS), pre = m[1], core = m[2], post = m[3];
+    if (!core) return p;
+    if (D[core]) return pre + D[core][i] + post;
+    const c = core.match(/^(\d+) (?:місце|місць)$/);
+    if (c) { const n = +c[1]; return pre + n + ' ' + (i ? plPl(n) : n === 1 ? 'place' : 'places') + post; }
+    let x = core
+      .replace(/~(\d+) хв пішки/, i ? '~$1 min pieszo' : '~$1 min on foot')
+      .replace(new RegExp('(\\d+(?:\\.\\d+)?) км(?![' + CY + '])', 'g'), '$1 km')
+      .replace(new RegExp('(\\d+) м(?![' + CY + '²])', 'g'), '$1 m')
+      .replace(new RegExp('(\\d+) хв(?![' + CY + '])', 'g'), '$1 min')
+      .replace(/ по прямій/, i ? ' w linii prostej' : ' as the crow flies')
+      .replace(/щодня/, i ? 'codziennie' : 'daily')
+      .replace(/^(Пішки|Велосипед|Авто): /, (_, w) => D[w][i] + ': ');
+    if (x !== core) return pre + x + post;
+    if (core.includes(', ')) { const ps = core.split(', '); if (ps.every(q => D[q])) return pre + ps.map(q => D[q][i]).join(', ') + post; }
+    return p;
+  }
+  function translate(s) {
+    if (lang === 'uk' || !s) return s;
+    const core = s.match(WS)[2]; if (!core) return s;
+    if (D[core] || !core.includes('·')) return part(s, ix());
+    return s.split('·').map(x => part(x, ix())).join('·');
+  }
+
+  /* текстові вузли та атрибути: зберігаємо оригінал, щоб можна було перемикати мову туди-сюди */
+  const tm = new WeakMap(), am = new WeakMap(), AT = ['placeholder', 'aria-label', 'title'];
+  function doText(n) {
+    const p = n.parentNode; if (!p || /^(SCRIPT|STYLE)$/.test(p.nodeName)) return;
+    const e = tm.get(n), src = e && e.out === n.data ? e.src : n.data, out = translate(src);
+    if (out !== n.data) n.data = out;
+    tm.set(n, { src, out });
+  }
+  function doAttrs(el) {
+    for (const a of AT) {
+      if (!el.hasAttribute || !el.hasAttribute(a)) continue;
+      const v = el.getAttribute(a), rec = am.get(el) || {}, e = rec[a], src = e && e.out === v ? e.src : v, out = translate(src);
+      if (out !== v) el.setAttribute(a, out);
+      rec[a] = { src, out }; am.set(el, rec);
+    }
+  }
+  function walk(n) {
+    if (n.nodeType === 3) return doText(n);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE)$/.test(n.nodeName)) return;
+    doAttrs(n); n.childNodes.forEach(walk);
+  }
+  new MutationObserver(rs => rs.forEach(r => {
+    if (r.type === 'characterData') doText(r.target);
+    else if (r.type === 'attributes') doAttrs(r.target);
+    else r.addedNodes.forEach(walk);
+  })).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: AT });
+
+  const meta = document.querySelector('meta[name=description]'), T0 = document.title, M0 = meta ? meta.content : '', btn = document.getElementById('lang');
+  function head() {
+    document.title = translate(T0); if (meta) meta.content = translate(M0);
+    document.documentElement.lang = lang;
+    btn.textContent = CODE[lang]; btn.title = NAMES[lang];
+  }
+  function setLang(l) {
+    lang = 'uk'; walk(document.body);                       // повертаємо оригінал (українська)
+    if (typeof sel !== 'undefined' && sel) renderDetail();  // перебудовуємо відкриту картку з оригінального тексту
+    lang = l; walk(document.body); head();
+    try { localStorage.setItem('lang', l); } catch (e) {}
+  }
+  btn.onclick = () => setLang(ORDER[(ORDER.indexOf(lang) + 1) % 3]);
+
+  let saved = null; try { saved = localStorage.getItem('lang'); } catch (e) {}
+  const nav = (navigator.language || 'uk').slice(0, 2);
+  const init = ORDER.includes(saved) ? saved : ORDER.includes(nav) ? nav : 'uk';
+  if (init !== 'uk') setLang(init); else head();
+})();
+
   </script>
 </body>
 </html>
